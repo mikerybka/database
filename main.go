@@ -15,16 +15,16 @@ import (
 const dataDir = "/home/mike/data"
 
 func main() {
-	addHost("brass.dev", brass.NewLib)
+	addHost[brass.App]("brass.dev")
 	err := http.ListenAndServe(":4000", nil)
 	if err != nil {
 		fmt.Println(err)
 	}
 }
 
-func addHost[RootType any](hostname string, mknew func(id string) *RootType) {
+func addHost[RootType any](hostname string) {
 	http.HandleFunc(fmt.Sprintf("GET /%s/{owner}", hostname), list)
-	http.HandleFunc(fmt.Sprintf("POST /%s/{owner}", hostname), create(mknew))
+	http.HandleFunc(fmt.Sprintf("POST /%s/{owner}", hostname), create[RootType])
 
 	http.HandleFunc(fmt.Sprintf("GET /%s/{owner}/{id}", hostname), getRoot[RootType])
 	http.HandleFunc(fmt.Sprintf("POST /%s/{owner}/{id}", hostname), handle[RootType])
@@ -48,42 +48,40 @@ func list(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func create[T any](mknew func(id string) *T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Generate a unique ID
-		id := util.RandomID()
-		path := filepath.Join(dataDir, r.URL.Path, id)
-		for {
-			// check if ID already taken
-			_, err := os.Stat(path)
-			if errors.Is(err, os.ErrNotExist) {
-				break
-			}
-			id = util.RandomID()
-			path = filepath.Join(dataDir, r.URL.Path, id)
+func create[T any](w http.ResponseWriter, r *http.Request) {
+	// Generate a unique ID
+	id := util.RandomID()
+	path := filepath.Join(dataDir, r.URL.Path, id)
+	for {
+		// check if ID already taken
+		_, err := os.Stat(path)
+		if errors.Is(err, os.ErrNotExist) {
+			break
 		}
+		id = util.RandomID()
+		path = filepath.Join(dataDir, r.URL.Path, id)
+	}
 
-		// Create the object
-		obj := mknew(id)
+	// Create the object
+	obj := new(T)
 
-		// Encode
-		b, err := json.Marshal(obj)
-		if err != nil {
-			panic(err)
-		}
+	// Encode
+	b, err := json.Marshal(obj)
+	if err != nil {
+		panic(err)
+	}
 
-		// Save the file
-		err = os.WriteFile(path, b, os.ModePerm)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	// Save the file
+	err = os.WriteFile(path, b, os.ModePerm)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-		// Write the response
-		_, err = w.Write(b)
-		if err != nil {
-			panic(err)
-		}
+	// Write the response
+	_, err = w.Write(b)
+	if err != nil {
+		panic(err)
 	}
 }
 
