@@ -15,7 +15,7 @@ import (
 const dataDir = "/home/mike/data"
 
 func main() {
-	addHost[brass.App]("brass.dev")
+	addHost[brass.Server]("brass.dev")
 	err := http.ListenAndServe(":4000", nil)
 	if err != nil {
 		fmt.Println(err)
