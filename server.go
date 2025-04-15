@@ -128,7 +128,7 @@ func (s *Server) UpdateRow(db, table, row string, columns map[string]string) err
 	}
 	mu.Lock()
 	defer mu.Unlock()
-
+	panic("not implemented")
 }
 func (s *Server) DeleteRow(db, table, row string) error {
 	mu, ok := s.locks[fmt.Sprintf("/%s/%s", db, table)]
@@ -137,7 +137,7 @@ func (s *Server) DeleteRow(db, table, row string) error {
 	}
 	mu.Lock()
 	defer mu.Unlock()
-
+	panic("not implemented")
 }
 func (s *Server) GetRowByID(dbID, tableID, rowID string) (row map[string]string, err error)
 func (s *Server) ListAllRows(dbID, tableID string) (rowIDs []string, err error)
